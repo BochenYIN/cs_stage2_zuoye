@@ -315,22 +315,22 @@
     <script>
         // Team data with emojis as logos
         const teams = [
-            { name: 'Falcons', logo: '🦅' },
-            { name: 'FaZe', logo: '⚡' },
-            { name: 'Virtus.pro', logo: '🐻' },
-            { name: '3DMAX', logo: '🔺' },
-            { name: 'HEROIC', logo: '⚔️' },
-            { name: 'FURIA', logo: '🐆' },
-            { name: 'MIBR', logo: '🇧🇷' },
-            { name: 'paiN', logo: '😈' },
-            { name: 'B8', logo: '8️⃣' },
-            { name: 'TYLOO', logo: '🐉' },
-            { name: 'M80', logo: '🎯' },
-            { name: 'Lynn Vision', logo: '🦁' },
-            { name: 'Legacy', logo: '👑' },
-            { name: 'BetBoom', logo: '💥' },
-            { name: 'OG', logo: '🛡️' },
-            { name: 'Nemiga', logo: '⭐' }
+            { name: 'Falcons', logo: 'https://img-cdn.hltv.org/teamlogo/4eJSkDQINNM6Tbs4WvLzkN.png?ixlib=java-2.1.0&w=200&s=d4dd034c2c7786f7c75e51a3a3aa7b5c' },
+            { name: 'FaZe', logo: 'https://img-cdn.hltv.org/teamlogo/66pHABGIztb3uoDAU18k76.png?ixlib=java-2.1.0&w=200&s=0f6fe7de622eaaeac136aab524a6d7a4' },
+            { name: 'Virtus.pro', logo: 'https://img-cdn.hltv.org/teamlogo/yZ6Bpuui1rW3jocXQ68XgZ.svg?ixlib=java-2.1.0&s=f39be1d3e7baf30a4e7f0b1216720875' },
+            { name: '3DMAX', logo: 'https://img-cdn.hltv.org/teamlogo/QGPDS3Z2-aMXwCYVgA4RWH.png?ixlib=java-2.1.0&w=200&s=7ee780a2a85e9a27098df617b87fb702' },
+            { name: 'HEROIC', logo: 'https://img-cdn.hltv.org/teamlogo/4S22uk_gnZTiQiI-hhH4yp.png?ixlib=java-2.1.0&w=200&s=f8e7b7825d7a6989479f1773574c9fd5' },
+            { name: 'FURIA', logo: 'https://img-cdn.hltv.org/teamlogo/mvNQc4csFGtxXk5guAh8m1.svg?ixlib=java-2.1.0&s=11e5056829ad5d6c06c5961bbe76d20c' },
+            { name: 'MIBR', logo: 'https://img-cdn.hltv.org/teamlogo/sVnH-oAf1J5TnMwoY4cxUC.png?ixlib=java-2.1.0&w=200&s=50d17f716e2c25219327e061a4ac046d' },
+            { name: 'paiN', logo: 'https://img-cdn.hltv.org/teamlogo/iUUCFwCOFmOrwhB8q8smMg.svg?ixlib=java-2.1.0&s=1446e1cf3d02deb8190fe6efd14e4ce4' },
+            { name: 'B8', logo: 'https://img-cdn.hltv.org/teamlogo/O6nRWTCjUzBAR4pcOcrpSG.png?ixlib=java-2.1.0&w=200&s=7c49777d91e3f2b8de8dbe439f8fb112' },
+            { name: 'TYLOO', logo: 'https://img-cdn.hltv.org/teamlogo/hMPKtNMDxp07n3lrBEHCuq.svg?ixlib=java-2.1.0&s=6d22fc4af07d0cd9d31fcd7f3023af9a' },
+            { name: 'M80', logo: 'https://img-cdn.hltv.org/teamlogo/U6ziW17pgYxsxR_WQJ_9-V.png?ixlib=java-2.1.0&w=200&s=63c6f7be1eae9c19f25d6c7f72e0e50c' },
+            { name: 'Lynn Vision', logo: 'https://img-cdn.hltv.org/teamlogo/DPcHT21uWwK1hDD_3txlL9.png?ixlib=java-2.1.0&w=200&s=3626534ba142cbfbf1937138db691c01' },
+            { name: 'Legacy', logo: 'https://img-cdn.hltv.org/teamlogo/RWbHH6RA8uGwJurGeLFvSr.png?ixlib=java-2.1.0&w=200&s=b81404d508cebf45f6331452ae2773d0' },
+            { name: 'BetBoom', logo: 'https://img-cdn.hltv.org/teamlogo/G4ZrdB0-q41USPd_z27IQA.png?ixlib=java-2.1.0&w=200&s=ffff79219e7490953d9d79771fcf8193' },
+            { name: 'OG', logo: 'https://img-cdn.hltv.org/teamlogo/VZHA__RIJY6gisB-l6HfiO.png?ixlib=java-2.1.0&w=200&s=eba028bb9a778e011fd92be6831cad5a' },
+            { name: 'Nemiga', logo: 'https://img-cdn.hltv.org/teamlogo/6ZPCm5r3XyGByXkFGiRnLh.png?ixlib=java-2.1.0&w=200&s=1a914d0f4164219aee64839b9002d22c' }
         ];
         
         let predictions = [];
@@ -353,8 +353,10 @@
             card.draggable = true;
             card.dataset.teamName = team.name;
             card.innerHTML = `
-                <div class="team-logo">${team.logo}</div>
-                <div class="team-name">${team.name}</div>
+            <div class="team-logo">
+                <img src="${team.logo}" alt="${team.name}" style="width: 48px; height: 48px; object-fit: contain;" draggable="false">
+            </div>
+            <div class="team-name">${team.name}</div>
             `;
             
             card.addEventListener('dragstart', handleDragStart);
@@ -578,7 +580,10 @@
                         
                         const total = predictions.length;
                         card.innerHTML = `
-                            <div class="stat-team">${team.logo} ${teamName}</div>
+                            <div class="stat-team">
+                                <img src="${team.logo}" alt="${teamName}" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 6px;">
+                                ${teamName}
+                            </div>
                             <div class="stat-details">
                                 <div>3-0: ${teamStats['3-0']}票 (${(teamStats['3-0']/total*100).toFixed(1)}%)</div>
                                 <div>0-3: ${teamStats['0-3']}票 (${(teamStats['0-3']/total*100).toFixed(1)}%)</div>
