@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS2 Major 竞猜统计工具</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0a0e27;
+            color: #fff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #00d4ff;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+        
+        .main-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 30px;
+        }
+        
+        .teams-pool {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .teams-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .team-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: move;
+            transition: all 0.3s;
+            user-select: none;
+            position: relative;
+        }
+        
+        .team-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+        }
+        
+        .drop-zone .team-card:hover::after {
+            content: '双击移除';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 68, 68, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        .team-card.dragging {
+            opacity: 0.5;
+        }
+        
+        .team-logo {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+        
+        .team-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .predictions-area {
+            display: grid;
+            grid-template-rows: auto auto auto;
+            gap: 20px;
+        }
+        
+        .prediction-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #00d4ff;
+        }
+        
+        .drop-zone {
+            min-height: 80px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        
+        .drop-zone.drag-over {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: #00d4ff;
+        }
+        
+        .drop-zone .team-card {
+            flex: 0 0 120px;
+            padding: 10px;
+        }
+        
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: #00d4ff;
+            color: #0a0e27;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #00a8cc;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+        }
+        
+        #predictor-name {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 16px;
+            width: 200px;
+        }
+        
+        .statistics {
+            margin-top: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-team {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #00d4ff;
+        }
+        
+        .stat-details {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: #1a1f3a;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .prediction-list {
+            margin-top: 20px;
+        }
+        
+        .prediction-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .delete-btn {
+            background: #ff4444;
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+        
+        .delete-btn:hover {
+            background: #cc0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 CS2 Major 竞猜统计工具</h1>
+        
+        <div class="main-layout">
+            <div class="teams-pool">
+                <h2 style="margin-bottom: 15px;">参赛队伍</h2>
+                <div class="teams-grid" id="teams-pool">
+                    <!-- Teams will be populated here -->
+                </div>
+            </div>
+            
+            <div class="predictions-area">
+                <div class="prediction-section">
+                    <div class="section-title">3-0 预测（2支队伍）</div>
+                    <div class="drop-zone" data-category="3-0" data-limit="2"></div>
+                    <p style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 5px;">提示：双击已放置的队伍可以移除</p>
+                </div>
+                
+                <div class="prediction-section">
+                    <div class="section-title">0-3 预测（2支队伍）</div>
+                    <div class="drop-zone" data-category="0-3" data-limit="2"></div>
+                </div>
+                
+                <div class="prediction-section">
+                    <div class="section-title">3-1/3-2 预测（6支队伍）</div>
+                    <div class="drop-zone" data-category="3-1/3-2" data-limit="6"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <input type="text" id="predictor-name" placeholder="输入预测者名称">
+            <button onclick="savePrediction()">保存预测</button>
+            <button onclick="resetCurrent()">重置当前</button>
+            <button onclick="showPredictions()">查看所有预测</button>
+            <button onclick="showStatistics()">查看统计</button>
+        </div>
+        
+        <div class="statistics" id="statistics" style="display: none;">
+            <h2>📊 统计结果</h2>
+            <div class="stats-grid" id="stats-grid"></div>
+        </div>
+    </div>
+    
+    <div class="modal" id="predictions-modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 20px;">所有预测记录</h2>
+            <div class="prediction-list" id="prediction-list"></div>
+            <button onclick="closePredictionsModal()" style="margin-top: 20px;">关闭</button>
+        </div>
+    </div>
+
+    <script>
+        // Team data with emojis as logos
+        const teams = [
+            { name: 'Falcons', logo: '🦅' },
+            { name: 'FaZe', logo: '⚡' },
+            { name: 'Virtus.pro', logo: '🐻' },
+            { name: '3DMAX', logo: '🔺' },
+            { name: 'HEROIC', logo: '⚔️' },
+            { name: 'FURIA', logo: '🐆' },
+            { name: 'MIBR', logo: '🇧🇷' },
+            { name: 'paiN', logo: '😈' },
+            { name: 'B8', logo: '8️⃣' },
+            { name: 'TYLOO', logo: '🐉' },
+            { name: 'M80', logo: '🎯' },
+            { name: 'Lynn Vision', logo: '🦁' },
+            { name: 'Legacy', logo: '👑' },
+            { name: 'BetBoom', logo: '💥' },
+            { name: 'OG', logo: '🛡️' },
+            { name: 'Nemiga', logo: '⭐' }
+        ];
+        
+        let predictions = [];
+        
+        // Initialize teams pool
+        function initializeTeams() {
+            const teamsPool = document.getElementById('teams-pool');
+            teamsPool.innerHTML = '';
+            
+            teams.forEach(team => {
+                const teamCard = createTeamCard(team);
+                teamsPool.appendChild(teamCard);
+            });
+        }
+        
+        // Create team card element
+        function createTeamCard(team) {
+            const card = document.createElement('div');
+            card.className = 'team-card';
+            card.draggable = true;
+            card.dataset.teamName = team.name;
+            card.innerHTML = `
+                <div class="team-logo">${team.logo}</div>
+                <div class="team-name">${team.name}</div>
+            `;
+            
+            card.addEventListener('dragstart', handleDragStart);
+            card.addEventListener('dragend', handleDragEnd);
+            
+            return card;
+        }
+        
+        // Drag and drop handlers
+        let draggedElement = null;
+        
+        function handleDragStart(e) {
+            draggedElement = e.target;
+            e.target.classList.add('dragging');
+        }
+        
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+        
+        // Setup drop zones
+        document.querySelectorAll('.drop-zone').forEach(zone => {
+            zone.addEventListener('dragover', handleDragOver);
+            zone.addEventListener('drop', handleDrop);
+            zone.addEventListener('dragleave', handleDragLeave);
+        });
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+        
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            
+            if (!draggedElement) return;
+            
+            const zone = e.currentTarget;
+            const limit = parseInt(zone.dataset.limit);
+            const currentTeams = zone.querySelectorAll('.team-card').length;
+            
+            if (currentTeams >= limit) {
+                alert(`此区域最多只能放置 ${limit} 支队伍！`);
+                return;
+            }
+            
+            // Remove team from any other zone
+            document.querySelectorAll('.drop-zone .team-card').forEach(card => {
+                if (card.dataset.teamName === draggedElement.dataset.teamName) {
+                    card.remove();
+                }
+            });
+            
+            // Add to new zone
+            const newCard = draggedElement.cloneNode(true);
+            newCard.addEventListener('dragstart', handleDragStart);
+            newCard.addEventListener('dragend', handleDragEnd);
+            newCard.addEventListener('dblclick', handleDoubleClick);
+            zone.appendChild(newCard);
+        }
+        
+        // Handle double click to remove from drop zone
+        function handleDoubleClick(e) {
+            const card = e.currentTarget;
+            if (card.parentElement.classList.contains('drop-zone')) {
+                card.remove();
+            }
+        }
+        
+        // Save prediction
+        window.savePrediction = function() {
+            const predictorName = document.getElementById('predictor-name').value.trim();
+            if (!predictorName) {
+                alert('请输入预测者名称！');
+                return;
+            }
+            
+            const prediction = {
+                id: Date.now(),
+                name: predictorName,
+                timestamp: new Date().toLocaleString('zh-CN'),
+                picks: {}
+            };
+            
+            // Collect picks from each zone
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                const category = zone.dataset.category;
+                const teams = Array.from(zone.querySelectorAll('.team-card')).map(card => card.dataset.teamName);
+                prediction.picks[category] = teams;
+            });
+            
+            // Validate picks
+            const picks30 = prediction.picks['3-0'] || [];
+            const picks03 = prediction.picks['0-3'] || [];
+            const picks3132 = prediction.picks['3-1/3-2'] || [];
+            
+            if (picks30.length !== 2) {
+                alert('请选择2支队伍进入3-0！');
+                return;
+            }
+            if (picks03.length !== 2) {
+                alert('请选择2支队伍进入0-3！');
+                return;
+            }
+            if (picks3132.length !== 6) {
+                alert('请选择6支队伍进入3-1/3-2！');
+                return;
+            }
+            
+            predictions.push(prediction);
+            
+            alert(`${predictorName} 的预测已保存！`);
+            resetCurrent();
+            document.getElementById('predictor-name').value = '';
+        }
+        
+        // Reset current prediction
+        window.resetCurrent = function() {
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.innerHTML = '';
+            });
+            initializeTeams();
+        }
+        
+        // Show all predictions
+        window.showPredictions = function() {
+            const modal = document.getElementById('predictions-modal');
+            const list = document.getElementById('prediction-list');
+            
+            list.innerHTML = '';
+            
+            if (predictions.length === 0) {
+                list.innerHTML = '<p style="text-align: center;">暂无预测记录</p>';
+            } else {
+                predictions.forEach(pred => {
+                    const item = document.createElement('div');
+                    item.className = 'prediction-item';
+                    
+                    let content = `
+                        <div class="prediction-header">
+                            <strong>${pred.name}</strong>
+                            <span>${pred.timestamp}</span>
+                            <button class="delete-btn" onclick="deletePrediction(${pred.id})">删除</button>
+                        </div>
+                        <div>
+                    `;
+                    
+                    Object.entries(pred.picks).forEach(([category, teams]) => {
+                        content += `<div><strong>${category}:</strong> ${teams.join(', ')}</div>`;
+                    });
+                    
+                    content += '</div>';
+                    item.innerHTML = content;
+                    list.appendChild(item);
+                });
+            }
+            
+            modal.style.display = 'flex';
+        }
+        
+        // Delete prediction
+        window.deletePrediction = function(id) {
+            if (confirm('确定要删除这条预测吗？')) {
+                predictions = predictions.filter(p => p.id !== id);
+                showPredictions();
+            }
+        }
+        
+        // Close predictions modal
+        window.closePredictionsModal = function() {
+            document.getElementById('predictions-modal').style.display = 'none';
+        }
+        
+        // Show statistics
+        window.showStatistics = function() {
+            const statsDiv = document.getElementById('statistics');
+            const statsGrid = document.getElementById('stats-grid');
+            
+            if (predictions.length === 0) {
+                alert('暂无预测数据！');
+                return;
+            }
+            
+            // Calculate statistics
+            const stats = {};
+            teams.forEach(team => {
+                stats[team.name] = {
+                    '3-0': 0,
+                    '0-3': 0,
+                    '3-1/3-2': 0,
+                    total: 0
+                };
+            });
+            
+            predictions.forEach(pred => {
+                Object.entries(pred.picks).forEach(([category, teams]) => {
+                    teams.forEach(teamName => {
+                        if (stats[teamName]) {
+                            stats[teamName][category]++;
+                            stats[teamName].total++;
+                        }
+                    });
+                });
+            });
+            
+            // Display statistics
+            statsGrid.innerHTML = '';
+            
+            Object.entries(stats)
+                .sort((a, b) => b[1].total - a[1].total)
+                .forEach(([teamName, teamStats]) => {
+                    if (teamStats.total > 0) {
+                        const team = teams.find(t => t.name === teamName);
+                        const card = document.createElement('div');
+                        card.className = 'stat-card';
+                        
+                        const total = predictions.length;
+                        card.innerHTML = `
+                            <div class="stat-team">${team.logo} ${teamName}</div>
+                            <div class="stat-details">
+                                <div>3-0: ${teamStats['3-0']}票 (${(teamStats['3-0']/total*100).toFixed(1)}%)</div>
+                                <div>0-3: ${teamStats['0-3']}票 (${(teamStats['0-3']/total*100).toFixed(1)}%)</div>
+                                <div>3-1/3-2: ${teamStats['3-1/3-2']}票 (${(teamStats['3-1/3-2']/total*100).toFixed(1)}%)</div>
+                                <div style="margin-top: 5px; font-weight: bold;">总计: ${teamStats.total}票</div>
+                            </div>
+                        `;
+                        
+                        statsGrid.appendChild(card);
+                    }
+                });
+            
+            statsDiv.style.display = 'block';
+            statsDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('predictions-modal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        // Initialize on load
+        initializeTeams();
+    </script>
+</body>
+</html>
